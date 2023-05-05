@@ -4,9 +4,10 @@ package org.iesvdm.tddjava.connect4;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.PrintStream;
+
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
-import java.io.PrintStream;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -111,12 +112,19 @@ public class Connect4TDDSpec {
 
     @Test
     public void whenAskedForCurrentPlayerTheOutputNotice() {
-        hola mensaje
+
     }
 
     @Test
     public void whenADiscIsIntroducedTheBoardIsPrinted() {
-
+        tested.putDiscInColumn(0);
+        String expectedOutput = "| | | | | | | |\n" +
+                "| | | | | | | |\n" +
+                "| | | | | | | |\n" +
+                "| | | | | | | |\n" +
+                "| | | | | | | |\n" +
+                "|R| | | | | | |\n";
+        assertThat(output.toString()).isEqualTo(expectedOutput);
     }
 
     /*
