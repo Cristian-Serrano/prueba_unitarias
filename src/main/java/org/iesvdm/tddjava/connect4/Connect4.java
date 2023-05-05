@@ -39,12 +39,18 @@ public class Connect4 {
 
     private Color[][] board = new Color[COLUMNS][ROWS];
 
+    /**
+     * Constructor con todos los huecos vacios
+     */
     public Connect4() {
         for (Color[] column : board) {
             Arrays.fill(column, Color.EMPTY);
         }
     }
 
+    /**
+     * Cambia de jugador actual e informa del nuevo jugador actual
+     */
     private void switchPlayer() {
         if (Color.RED == currentPlayer) {
             currentPlayer = Color.GREEN;
@@ -54,6 +60,9 @@ public class Connect4 {
         System.out.println("Current turn: " + currentPlayer);
     }
 
+    /**
+     * Pinta el tablero por pantalla, fila a fila
+     */
     public void printBoard() {
         for (int row = ROWS - 1; row >= 0; --row) {
             StringJoiner stringJoiner = new StringJoiner(DELIMITER, DELIMITER, DELIMITER);
@@ -64,6 +73,10 @@ public class Connect4 {
         }
     }
 
+    /**
+     * Poner disco(ficha) en columna pasada por parametro
+     * @param column del 1 al 7
+     */
     public void putDisc(int column) {
         if (column > 0 && column <= COLUMNS) {
             int numOfDiscs = getNumberOfDiscsInColumn(column - 1);
@@ -120,6 +133,7 @@ public class Connect4 {
         }
 
         // Diagonal checks
+        // asc
         int startOffset = Math.min(col, row);
         int column = col - startOffset, auxRow = row - startOffset;
         stringJoiner = new StringJoiner("");
@@ -132,6 +146,7 @@ public class Connect4 {
             return;
         }
 
+        // desc
         startOffset = Math.min(col, ROWS - 1 - row);
         column = col - startOffset;
         auxRow = row + startOffset;

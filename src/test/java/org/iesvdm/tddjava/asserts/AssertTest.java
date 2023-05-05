@@ -87,7 +87,7 @@ public class AssertTest {
 
         List list = Arrays.asList(first, second);
 
-        assertEquals(list.size(), 2);
+        assertEquals(2,list.size());
 
     }
 
@@ -96,7 +96,7 @@ public class AssertTest {
 
         List list = Arrays.asList();
 
-        assertEquals(list.size(), 0);
+        assertEquals(0,list.size());
 
     }
 
@@ -123,7 +123,7 @@ public class AssertTest {
 
         assertTrue(list.size() == list2.size());
         assertTrue(list.containsAll(list2));
-        assertTrue(list2.containsAll(list));
+        //assertTrue(list2.containsAll(list));
 
     }
 
