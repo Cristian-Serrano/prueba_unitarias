@@ -111,7 +111,7 @@ public class Connect4TDDSpec {
 
     @Test
     public void whenAskedForCurrentPlayerTheOutputNotice() {
-
+        hola mensaje
     }
 
     @Test
