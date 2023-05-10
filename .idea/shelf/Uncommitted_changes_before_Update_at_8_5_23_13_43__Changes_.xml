@@ -1,0 +1,9 @@
+<changelist name="Uncommitted_changes_before_Update_at_8_5_23_13_43_[Changes]" date="1683546208853" recycled="true" deleted="true">
+  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_8_5_23_13_43_[Changes]/shelved.patch" />
+  <option name="DESCRIPTION" value="Uncommitted changes before Update at 8/5/23 13:43 [Changes]" />
+  <binary>
+    <option name="BEFORE_PATH" value="target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class" />
+    <option name="AFTER_PATH" value="target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class" />
+    <option name="SHELVED_PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_8_5_23_13_43_[Changes]/Connect4TDDSpec.class" />
+  </binary>
+</changelist>

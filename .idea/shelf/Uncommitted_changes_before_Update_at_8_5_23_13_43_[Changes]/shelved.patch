@@ -1,0 +1,251 @@
+Index: src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package org.iesvdm.tddjava.connect4;\n\n\nimport org.junit.jupiter.api.BeforeEach;\nimport org.junit.jupiter.api.Test;\n\nimport java.io.PrintStream;\n\nimport java.io.ByteArrayOutputStream;\nimport java.io.OutputStream;\n\nimport static org.assertj.core.api.Assertions.*;\n\nimport static org.junit.jupiter.api.Assertions.assertThrows;\n\npublic class Connect4TDDSpec {\n\n    private Connect4TDD tested;\n\n    private OutputStream output;\n\n    @BeforeEach\n    public void beforeEachTest() {\n        output = new ByteArrayOutputStream();\n        tested = new Connect4TDD(new PrintStream(output));\n    }\n\n    /*\n     * The board is composed by 7 horizontal and 6 vertical empty positions\n     */\n\n    @Test\n    public void whenTheGameStartsTheBoardIsEmpty() {\n        assertThat(tested.getNumberOfDiscs()).isEqualTo(0);\n    }\n\n    /*\n     * Players introduce discs on the top of the columns.\n     * Introduced disc drops down the board if the column is empty.\n     * Future discs introduced in the same column will stack over previous ones\n     */\n\n    @Test\n    public void whenDiscOutsideBoardThenRuntimeException() {\n        /*\n            LAMBDA FUNCION ANONIMA EN ESTE CASO SIN ARGUMENTOS DE ENTRADA Y DEVOLVIENDO VOID\n            DADO QUE NO HAY RETURN DENTRO DEL BLOQUE LAMBDA\n            () -> {\n\n            }\n         */\n        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {\n            tested.putDiscInColumn(7);\n        });\n        RuntimeException runtimeException2 = assertThrows(RuntimeException.class, () -> {\n            tested.putDiscInColumn(-1);\n        });\n\n        assertThat(runtimeException.getMessage()).isEqualTo(\"Invalid column 7\");\n        assertThat(runtimeException.getMessage()).isEqualTo(\"Invalid column -1\");\n    }\n\n    @Test\n    public void whenFirstDiscInsertedInColumnThenPositionIsZero() {\n        assertThat(tested.putDiscInColumn(1)).isEqualTo(0);\n    }\n\n    @Test\n    public void whenSecondDiscInsertedInColumnThenPositionIsOne() {\n        tested.putDiscInColumn(1);\n        assertThat(tested.putDiscInColumn(1)).isEqualTo(1);\n    }\n\n    @Test\n    public void whenDiscInsertedThenNumberOfDiscsIncreases() {\n        int cantidadAntes = tested.getNumberOfDiscs();\n        tested.putDiscInColumn(1);\n        assertThat(tested.getNumberOfDiscs()).isEqualTo(cantidadAntes+1);\n    }\n\n    @Test\n    public void whenNoMoreRoomInColumnThenRuntimeException() {\n\n        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {\n            for (int i = 0; i < 7; i++) {\n                tested.putDiscInColumn(0);\n            }\n        });\n        assertThat(runtimeException.getMessage()).isEqualTo(\"No more room in column 0\");\n    }\n\n    /*\n     * It is a two-person game so there is one colour for each player.\n     * One player uses red ('R'), the other one uses green ('G').\n     * Players alternate turns, inserting one disc every time\n     */\n\n    @Test\n    public void whenFirstPlayerPlaysThenDiscColorIsRed() {\n        assertThat(tested.getCurrentPlayer()).isEqualTo(\"R\");\n    }\n\n    @Test\n    public void whenSecondPlayerPlaysThenDiscColorIsRed() {\n        assertThat(tested.getCurrentPlayer()).isEqualTo(\"R\");\n    }\n\n    /*\n     * We want feedback when either, event or error occur within the game.\n     * The output shows the status of the board on every move\n     */\n\n    @Test\n    public void whenAskedForCurrentPlayerTheOutputNotice() {\n\n    }\n\n    @Test\n    public void whenADiscIsIntroducedTheBoardIsPrinted() {\n        tested.putDiscInColumn(0);\n        String expectedOutput = \"| | | | | | | |\\n\" +\n                \"| | | | | | | |\\n\" +\n                \"| | | | | | | |\\n\" +\n                \"| | | | | | | |\\n\" +\n                \"| | | | | | | |\\n\" +\n                \"|R| | | | | | |\\n\";\n        assertThat(output.toString()).isEqualTo(expectedOutput);\n    }\n\n    /*\n     * When no more discs can be inserted, the game finishes and it is considered a draw\n     */\n\n    @Test\n    public void whenTheGameStartsItIsNotFinished() {\n        assertThat(tested.isFinished()).isEqualTo(false);\n    }\n\n    @Test\n    public void whenNoDiscCanBeIntroducedTheGamesIsFinished() {\n        for (int i = 0; i < 7; i++) {\n            for (int j = 0; j < 6; j++) {\n                tested.putDiscInColumn(i);\n            }\n        }\n        assertThat(tested.isFinished()).isEqualTo(true);\n    }\n\n    /*\n     * If a player inserts a disc and connects more than 3 discs of his colour\n     * in a straight vertical line then that player wins\n     */\n\n    @Test\n    public void when4VerticalDiscsAreConnectedThenThatPlayerWins() {\n        for (int i = 0; i < 3; i++) {\n            tested.putDiscInColumn(0);\n            tested.putDiscInColumn(1);\n        }\n        tested.putDiscInColumn(0);\n        assertThat(tested.getWinner()).isEqualTo(\"R\");\n    }\n\n    /*\n     * If a player inserts a disc and connects more than 3 discs of his colour\n     * in a straight horizontal line then that player wins\n     */\n\n    @Test\n    public void when4HorizontalDiscsAreConnectedThenThatPlayerWins() {\n        for (int i = 0; i < 3; i++) {\n            tested.putDiscInColumn(i);\n            tested.putDiscInColumn(i);\n        }\n        tested.putDiscInColumn(3);\n        assertThat(tested.getWinner()).isEqualTo(\"R\");\n    }\n\n    /*\n     * If a player inserts a disc and connects more than 3 discs of his colour\n     * in a straight diagonal line then that player wins\n     */\n\n    @Test\n    public void when4Diagonal1DiscsAreConnectedThenThatPlayerWins() {\n        //diagonal ascendente\n        tested.putDiscInColumn(0);\n        tested.putDiscInColumn(1);\n        tested.putDiscInColumn(1);\n        tested.putDiscInColumn(2);\n        tested.putDiscInColumn(2);\n        tested.putDiscInColumn(3);\n        tested.putDiscInColumn(2);\n        tested.putDiscInColumn(3);\n        tested.putDiscInColumn(3);\n        tested.putDiscInColumn(4);\n        tested.putDiscInColumn(3);\n        assertThat(tested.getWinner()).isEqualTo(\"R\");\n    }\n\n    @Test\n    public void when4Diagonal2DiscsAreConnectedThenThatPlayerWins() {\n        //diagonal descendente\n        tested.putDiscInColumn(3);\n        tested.putDiscInColumn(2);\n        tested.putDiscInColumn(2);\n        tested.putDiscInColumn(1);\n        tested.putDiscInColumn(1);\n        tested.putDiscInColumn(6);\n        tested.putDiscInColumn(1);\n        tested.putDiscInColumn(0);\n        tested.putDiscInColumn(0);\n        tested.putDiscInColumn(0);\n        tested.putDiscInColumn(0);\n        assertThat(tested.getWinner()).isEqualTo(\"R\");\n    }\n}\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java b/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java
+--- a/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java	(revision 896cf7339e31b7e7594afda2b0313e45f478b841)
++++ b/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java	(date 1683543451620)
+@@ -52,12 +52,11 @@
+         RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
+             tested.putDiscInColumn(7);
+         });
++        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column 7");
+         RuntimeException runtimeException2 = assertThrows(RuntimeException.class, () -> {
+             tested.putDiscInColumn(-1);
+         });
+-
+-        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column 7");
+-        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column -1");
++        assertThat(runtimeException2.getMessage()).isEqualTo("Invalid column -1");
+     }
+ 
+     @Test
+@@ -112,7 +111,8 @@
+ 
+     @Test
+     public void whenAskedForCurrentPlayerTheOutputNotice() {
+-
++        tested.getCurrentPlayer();
++        assertThat(output.toString()).isEqualTo("Player R turn\n");
+     }
+ 
+     @Test
+@@ -184,34 +184,34 @@
+     @Test
+     public void when4Diagonal1DiscsAreConnectedThenThatPlayerWins() {
+         //diagonal ascendente
+-        tested.putDiscInColumn(0);
++        tested.putDiscInColumn(0);//diagonal
+         tested.putDiscInColumn(1);
+-        tested.putDiscInColumn(1);
+-        tested.putDiscInColumn(2);
++        tested.putDiscInColumn(1);//diagonal
+         tested.putDiscInColumn(2);
+-        tested.putDiscInColumn(3);
+         tested.putDiscInColumn(2);
+         tested.putDiscInColumn(3);
++        tested.putDiscInColumn(2);//diagonal
+         tested.putDiscInColumn(3);
+-        tested.putDiscInColumn(4);
+         tested.putDiscInColumn(3);
++        tested.putDiscInColumn(5);
++        tested.putDiscInColumn(3);//diagonal
+         assertThat(tested.getWinner()).isEqualTo("R");
+     }
+ 
+     @Test
+     public void when4Diagonal2DiscsAreConnectedThenThatPlayerWins() {
+         //diagonal descendente
+-        tested.putDiscInColumn(3);
++        tested.putDiscInColumn(3);//diagonal
+         tested.putDiscInColumn(2);
+-        tested.putDiscInColumn(2);
++        tested.putDiscInColumn(2);//diagonal
+         tested.putDiscInColumn(1);
+         tested.putDiscInColumn(1);
+         tested.putDiscInColumn(6);
+-        tested.putDiscInColumn(1);
++        tested.putDiscInColumn(1);//diagonal
+         tested.putDiscInColumn(0);
+         tested.putDiscInColumn(0);
+         tested.putDiscInColumn(0);
+-        tested.putDiscInColumn(0);
++        tested.putDiscInColumn(0);//diagonal
+         assertThat(tested.getWinner()).isEqualTo("R");
+     }
+ }
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<project version=\"4\">\n  <component name=\"AutoImportSettings\">\n    <option name=\"autoReloadType\" value=\"SELECTIVE\" />\n  </component>\n  <component name=\"ChangeListManager\">\n    <list default=\"true\" id=\"561063a2-7378-4c9d-bb45-d310103a949e\" name=\"Changes\" comment=\"COMMIT INICIAL\">\n      <change beforePath=\"$PROJECT_DIR$/.idea/workspace.xml\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/.idea/workspace.xml\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4$Color.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4$Color.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4TDD.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4TDD.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendsCollection.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendsCollection.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Friendships.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Friendships.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendshipsMongo.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendshipsMongo.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Person.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Person.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Direction.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Direction.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Location.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Location.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Planet.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Planet.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Point.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Point.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Ship.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Ship.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/tictactoe/TicTacToe.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/tictactoe/TicTacToe.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertJTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertJTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/HamcrestTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/HamcrestTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec2.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec2.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsAssertJTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsAssertJTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsHamcrestTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsHamcrestTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoAssertJTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoAssertJTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoEasyMockTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoEasyMockTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/PersonTest.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/PersonTest.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/DirectionSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/DirectionSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/LocationSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/LocationSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PlanetSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PlanetSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PointSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PointSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/ShipSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/ShipSpec.class\" afterDir=\"false\" />\n      <change beforePath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/tictactoe/TicTacToeSpec.class\" beforeDir=\"false\" afterPath=\"$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/tictactoe/TicTacToeSpec.class\" afterDir=\"false\" />\n    </list>\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\n  </component>\n  <component name=\"CodeStyleSettingsInfer\">\n    <option name=\"done\" value=\"true\" />\n  </component>\n  <component name=\"FileTemplateManagerImpl\">\n    <option name=\"RECENT_TEMPLATES\">\n      <list>\n        <option value=\"Class\" />\n      </list>\n    </option>\n  </component>\n  <component name=\"Git.Settings\">\n    <option name=\"PUSH_TAGS\">\n      <GitPushTagMode>\n        <option name=\"argument\" value=\"--tags\" />\n        <option name=\"title\" value=\"All\" />\n      </GitPushTagMode>\n    </option>\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\n  </component>\n  <component name=\"HighlightingSettingsPerFile\">\n    <setting file=\"file://$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/friendships/FriendshipsTest.java\" root0=\"SKIP_INSPECTION\" />\n  </component>\n  <component name=\"JavaAutoRunManager\">\n    <enabled-run-configurations>\n      <run-configuration type=\"JUnit\" name=\"Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins\" />\n    </enabled-run-configurations>\n  </component>\n  <component name=\"MarkdownSettingsMigration\">\n    <option name=\"stateVersion\" value=\"1\" />\n  </component>\n  <component name=\"ProblemsViewState\">\n    <option name=\"selectedTabId\" value=\"CurrentFile\" />\n  </component>\n  <component name=\"ProjectCodeStyleSettingsMigration\">\n    <option name=\"version\" value=\"2\" />\n  </component>\n  <component name=\"ProjectId\" id=\"2NavDfOItDA1IAEiXIxc2tPqQHt\" />\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\n  <component name=\"ProjectViewState\">\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\n    <option name=\"showLibraryContents\" value=\"true\" />\n  </component>\n  <component name=\"PropertiesComponent\">{\n  &quot;keyToString&quot;: {\n    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,\n    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,\n    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,\n    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,\n    &quot;last_opened_file_path&quot;: &quot;/home/cristianserrano/Escritorio/entornos_de_desarrollo/tema3/prueba_unitarias&quot;,\n    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,\n    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,\n    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,\n    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,\n    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,\n    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,\n    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,\n    &quot;settings.editor.selected.configurable&quot;: &quot;editor.preferences.completion&quot;,\n    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;\n  }\n}</component>\n  <component name=\"RecentsManager\">\n    <key name=\"CopyFile.RECENT_KEYS\">\n      <recent name=\"C:\\Users\\usuario\\IdeaProjects\\bucles\\bd_persons\\test_person\" />\n      <recent name=\"C:\\Users\\usuario\\IdeaProjects\\bucles\\bd_persons\\test_person\\src\" />\n    </key>\n    <key name=\"MoveFile.RECENT_KEYS\">\n      <recent name=\"C:\\Users\\usuario\\IdeaProjects\\bucles\\bd_persons\\test_person\" />\n    </key>\n  </component>\n  <component name=\"RunManager\" selected=\"JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted\">\n    <configuration name=\"Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins\" type=\"JUnit\" factoryName=\"JUnit\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"prueba_unitarias\" />\n      <extension name=\"coverage\">\n        <pattern>\n          <option name=\"PATTERN\" value=\"org.iesvdm.tddjava.connect4.*\" />\n          <option name=\"ENABLED\" value=\"true\" />\n        </pattern>\n      </extension>\n      <option name=\"PACKAGE_NAME\" value=\"org.iesvdm.tddjava.connect4\" />\n      <option name=\"MAIN_CLASS_NAME\" value=\"org.iesvdm.tddjava.connect4.Connect4TDDSpec\" />\n      <option name=\"METHOD_NAME\" value=\"when4Diagonal2DiscsAreConnectedThenThatPlayerWins\" />\n      <option name=\"TEST_OBJECT\" value=\"method\" />\n      <method v=\"2\">\n        <option name=\"Make\" enabled=\"true\" />\n      </method>\n    </configuration>\n    <configuration name=\"Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins\" type=\"JUnit\" factoryName=\"JUnit\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"prueba_unitarias\" />\n      <extension name=\"coverage\">\n        <pattern>\n          <option name=\"PATTERN\" value=\"org.iesvdm.tddjava.connect4.*\" />\n          <option name=\"ENABLED\" value=\"true\" />\n        </pattern>\n      </extension>\n      <option name=\"PACKAGE_NAME\" value=\"org.iesvdm.tddjava.connect4\" />\n      <option name=\"MAIN_CLASS_NAME\" value=\"org.iesvdm.tddjava.connect4.Connect4TDDSpec\" />\n      <option name=\"METHOD_NAME\" value=\"when4HorizontalDiscsAreConnectedThenThatPlayerWins\" />\n      <option name=\"TEST_OBJECT\" value=\"method\" />\n      <method v=\"2\">\n        <option name=\"Make\" enabled=\"true\" />\n      </method>\n    </configuration>\n    <configuration name=\"Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins\" type=\"JUnit\" factoryName=\"JUnit\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"prueba_unitarias\" />\n      <extension name=\"coverage\">\n        <pattern>\n          <option name=\"PATTERN\" value=\"org.iesvdm.tddjava.connect4.*\" />\n          <option name=\"ENABLED\" value=\"true\" />\n        </pattern>\n      </extension>\n      <option name=\"PACKAGE_NAME\" value=\"org.iesvdm.tddjava.connect4\" />\n      <option name=\"MAIN_CLASS_NAME\" value=\"org.iesvdm.tddjava.connect4.Connect4TDDSpec\" />\n      <option name=\"METHOD_NAME\" value=\"when4VerticalDiscsAreConnectedThenThatPlayerWins\" />\n      <option name=\"TEST_OBJECT\" value=\"method\" />\n      <method v=\"2\">\n        <option name=\"Make\" enabled=\"true\" />\n      </method>\n    </configuration>\n    <configuration name=\"Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted\" type=\"JUnit\" factoryName=\"JUnit\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"prueba_unitarias\" />\n      <extension name=\"coverage\">\n        <pattern>\n          <option name=\"PATTERN\" value=\"org.iesvdm.tddjava.connect4.*\" />\n          <option name=\"ENABLED\" value=\"true\" />\n        </pattern>\n      </extension>\n      <option name=\"PACKAGE_NAME\" value=\"org.iesvdm.tddjava.connect4\" />\n      <option name=\"MAIN_CLASS_NAME\" value=\"org.iesvdm.tddjava.connect4.Connect4TDDSpec\" />\n      <option name=\"METHOD_NAME\" value=\"whenADiscIsIntroducedTheBoardIsPrinted\" />\n      <option name=\"TEST_OBJECT\" value=\"method\" />\n      <method v=\"2\">\n        <option name=\"Make\" enabled=\"true\" />\n      </method>\n    </configuration>\n    <configuration name=\"Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished\" type=\"JUnit\" factoryName=\"JUnit\" temporary=\"true\" nameIsGenerated=\"true\">\n      <module name=\"prueba_unitarias\" />\n      <extension name=\"coverage\">\n        <pattern>\n          <option name=\"PATTERN\" value=\"org.iesvdm.tddjava.connect4.*\" />\n          <option name=\"ENABLED\" value=\"true\" />\n        </pattern>\n      </extension>\n      <option name=\"PACKAGE_NAME\" value=\"org.iesvdm.tddjava.connect4\" />\n      <option name=\"MAIN_CLASS_NAME\" value=\"org.iesvdm.tddjava.connect4.Connect4TDDSpec\" />\n      <option name=\"METHOD_NAME\" value=\"whenNoDiscCanBeIntroducedTheGamesIsFinished\" />\n      <option name=\"TEST_OBJECT\" value=\"method\" />\n      <method v=\"2\">\n        <option name=\"Make\" enabled=\"true\" />\n      </method>\n    </configuration>\n    <list>\n      <item itemvalue=\"JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted\" />\n      <item itemvalue=\"JUnit.Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins\" />\n      <item itemvalue=\"JUnit.Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins\" />\n      <item itemvalue=\"JUnit.Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins\" />\n      <item itemvalue=\"JUnit.Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished\" />\n    </list>\n    <recent_temporary>\n      <list>\n        <item itemvalue=\"JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted\" />\n        <item itemvalue=\"JUnit.Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins\" />\n        <item itemvalue=\"JUnit.Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins\" />\n        <item itemvalue=\"JUnit.Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins\" />\n        <item itemvalue=\"JUnit.Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished\" />\n      </list>\n    </recent_temporary>\n  </component>\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\n  <component name=\"TaskManager\">\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\n      <changelist id=\"561063a2-7378-4c9d-bb45-d310103a949e\" name=\"Changes\" comment=\"\" />\n      <created>1679914891298</created>\n      <option name=\"number\" value=\"Default\" />\n      <option name=\"presentableId\" value=\"Default\" />\n      <updated>1679914891298</updated>\n      <workItem from=\"1679914892768\" duration=\"5177000\" />\n      <workItem from=\"1680002999856\" duration=\"9282000\" />\n      <workItem from=\"1680156665397\" duration=\"15597000\" />\n      <workItem from=\"1680244650466\" duration=\"2412000\" />\n      <workItem from=\"1680253402247\" duration=\"1171000\" />\n    </task>\n    <task id=\"LOCAL-00001\" summary=\"COMMIT INICIAL\">\n      <created>1680163647182</created>\n      <option name=\"number\" value=\"00001\" />\n      <option name=\"presentableId\" value=\"LOCAL-00001\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1680163647182</updated>\n    </task>\n    <task id=\"LOCAL-00002\" summary=\"COMMIT INICIAL\">\n      <created>1680176003779</created>\n      <option name=\"number\" value=\"00002\" />\n      <option name=\"presentableId\" value=\"LOCAL-00002\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1680176003779</updated>\n    </task>\n    <task id=\"LOCAL-00003\" summary=\"COMMIT INICIAL\">\n      <created>1683285428787</created>\n      <option name=\"number\" value=\"00003\" />\n      <option name=\"presentableId\" value=\"LOCAL-00003\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1683285428787</updated>\n    </task>\n    <task id=\"LOCAL-00004\" summary=\"COMMIT INICIAL\">\n      <created>1683285490555</created>\n      <option name=\"number\" value=\"00004\" />\n      <option name=\"presentableId\" value=\"LOCAL-00004\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1683285490555</updated>\n    </task>\n    <task id=\"LOCAL-00005\" summary=\"COMMIT INICIAL\">\n      <created>1683286578463</created>\n      <option name=\"number\" value=\"00005\" />\n      <option name=\"presentableId\" value=\"LOCAL-00005\" />\n      <option name=\"project\" value=\"LOCAL\" />\n      <updated>1683286578463</updated>\n    </task>\n    <option name=\"localTasksCounter\" value=\"6\" />\n    <servers />\n  </component>\n  <component name=\"TypeScriptGeneratedFilesManager\">\n    <option name=\"version\" value=\"3\" />\n  </component>\n  <component name=\"Vcs.Log.Tabs.Properties\">\n    <option name=\"TAB_STATES\">\n      <map>\n        <entry key=\"MAIN\">\n          <value>\n            <State />\n          </value>\n        </entry>\n      </map>\n    </option>\n  </component>\n  <component name=\"VcsManagerConfiguration\">\n    <MESSAGE value=\"COMMIT INICIAL\" />\n    <option name=\"LAST_COMMIT_MESSAGE\" value=\"COMMIT INICIAL\" />\n  </component>\n  <component name=\"XDebuggerManager\">\n    <breakpoint-manager>\n      <breakpoints>\n        <line-breakpoint enabled=\"true\" type=\"java-line\">\n          <url>file://$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/tictactoe/TicTacToeSpec.java</url>\n          <line>41</line>\n          <option name=\"timeStamp\" value=\"1\" />\n        </line-breakpoint>\n      </breakpoints>\n    </breakpoint-manager>\n  </component>\n  <component name=\"com.intellij.coverage.CoverageDataManagerImpl\">\n    <SUITE FILE_PATH=\"coverage/prueba_unitarias$FriendshipsTest_joeHas5Friends.ic\" NAME=\"FriendshipsTest.joeHas5Friends Coverage Results\" MODIFIED=\"1682338372009\" SOURCE_PROVIDER=\"com.intellij.coverage.DefaultCoverageFileProvider\" RUNNER=\"idea\" COVERAGE_BY_TEST_ENABLED=\"false\" COVERAGE_TRACING_ENABLED=\"false\">\n      <FILTER>org.iesvdm.tddjava.friendships.*</FILTER>\n    </SUITE>\n  </component>\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision 896cf7339e31b7e7594afda2b0313e45f478b841)
++++ b/.idea/workspace.xml	(date 1683543621046)
+@@ -4,39 +4,10 @@
+     <option name="autoReloadType" value="SELECTIVE" />
+   </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="561063a2-7378-4c9d-bb45-d310103a949e" name="Changes" comment="COMMIT INICIAL">
++    <list default="true" id="561063a2-7378-4c9d-bb45-d310103a949e" name="Changes" comment="sd">
+       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/org/iesvdm/tddjava/connect4/Connect4TDDSpec.java" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4$Color.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4$Color.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4TDD.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/connect4/Connect4TDD.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendsCollection.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendsCollection.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Friendships.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Friendships.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendshipsMongo.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/FriendshipsMongo.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Person.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/friendships/Person.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Direction.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Direction.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Location.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Location.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Planet.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Planet.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Point.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Point.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Ship.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/ship/Ship.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/tictactoe/TicTacToe.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/classes/org/iesvdm/tddjava/tictactoe/TicTacToe.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertJTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertJTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/AssertTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/HamcrestTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/asserts/HamcrestTest.class" afterDir="false" />
+       <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec2.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/connect4/Connect4TDDSpec2.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsAssertJTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsAssertJTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsHamcrestTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsHamcrestTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoAssertJTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoAssertJTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoEasyMockTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsMongoEasyMockTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/FriendshipsTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/PersonTest.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/friendships/PersonTest.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/DirectionSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/DirectionSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/LocationSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/LocationSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PlanetSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PlanetSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PointSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/PointSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/ShipSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/ship/ShipSpec.class" afterDir="false" />
+-      <change beforePath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/tictactoe/TicTacToeSpec.class" beforeDir="false" afterPath="$PROJECT_DIR$/target/test-classes/org/iesvdm/tddjava/tictactoe/TicTacToeSpec.class" afterDir="false" />
+     </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+@@ -112,8 +83,8 @@
+       <recent name="C:\Users\usuario\IdeaProjects\bucles\bd_persons\test_person" />
+     </key>
+   </component>
+-  <component name="RunManager" selected="JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted">
+-    <configuration name="Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
++  <component name="RunManager" selected="JUnit.Connect4TDDSpec">
++    <configuration name="Connect4TDDSpec" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+       <module name="prueba_unitarias" />
+       <extension name="coverage">
+         <pattern>
+@@ -123,13 +94,12 @@
+       </extension>
+       <option name="PACKAGE_NAME" value="org.iesvdm.tddjava.connect4" />
+       <option name="MAIN_CLASS_NAME" value="org.iesvdm.tddjava.connect4.Connect4TDDSpec" />
+-      <option name="METHOD_NAME" value="when4Diagonal2DiscsAreConnectedThenThatPlayerWins" />
+-      <option name="TEST_OBJECT" value="method" />
++      <option name="TEST_OBJECT" value="class" />
+       <method v="2">
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
++    <configuration name="Connect4TDDSpec.when4Diagonal1DiscsAreConnectedThenThatPlayerWins" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+       <module name="prueba_unitarias" />
+       <extension name="coverage">
+         <pattern>
+@@ -139,13 +109,13 @@
+       </extension>
+       <option name="PACKAGE_NAME" value="org.iesvdm.tddjava.connect4" />
+       <option name="MAIN_CLASS_NAME" value="org.iesvdm.tddjava.connect4.Connect4TDDSpec" />
+-      <option name="METHOD_NAME" value="when4HorizontalDiscsAreConnectedThenThatPlayerWins" />
++      <option name="METHOD_NAME" value="when4Diagonal1DiscsAreConnectedThenThatPlayerWins" />
+       <option name="TEST_OBJECT" value="method" />
+       <method v="2">
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
++    <configuration name="Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+       <module name="prueba_unitarias" />
+       <extension name="coverage">
+         <pattern>
+@@ -155,13 +125,13 @@
+       </extension>
+       <option name="PACKAGE_NAME" value="org.iesvdm.tddjava.connect4" />
+       <option name="MAIN_CLASS_NAME" value="org.iesvdm.tddjava.connect4.Connect4TDDSpec" />
+-      <option name="METHOD_NAME" value="when4VerticalDiscsAreConnectedThenThatPlayerWins" />
++      <option name="METHOD_NAME" value="whenADiscIsIntroducedTheBoardIsPrinted" />
+       <option name="TEST_OBJECT" value="method" />
+       <method v="2">
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
++    <configuration name="Connect4TDDSpec.whenAskedForCurrentPlayerTheOutputNotice" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+       <module name="prueba_unitarias" />
+       <extension name="coverage">
+         <pattern>
+@@ -171,13 +141,13 @@
+       </extension>
+       <option name="PACKAGE_NAME" value="org.iesvdm.tddjava.connect4" />
+       <option name="MAIN_CLASS_NAME" value="org.iesvdm.tddjava.connect4.Connect4TDDSpec" />
+-      <option name="METHOD_NAME" value="whenADiscIsIntroducedTheBoardIsPrinted" />
++      <option name="METHOD_NAME" value="whenAskedForCurrentPlayerTheOutputNotice" />
+       <option name="TEST_OBJECT" value="method" />
+       <method v="2">
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+-    <configuration name="Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
++    <configuration name="Connect4TDDSpec.whenDiscOutsideBoardThenRuntimeException" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+       <module name="prueba_unitarias" />
+       <extension name="coverage">
+         <pattern>
+@@ -187,26 +157,26 @@
+       </extension>
+       <option name="PACKAGE_NAME" value="org.iesvdm.tddjava.connect4" />
+       <option name="MAIN_CLASS_NAME" value="org.iesvdm.tddjava.connect4.Connect4TDDSpec" />
+-      <option name="METHOD_NAME" value="whenNoDiscCanBeIntroducedTheGamesIsFinished" />
++      <option name="METHOD_NAME" value="whenDiscOutsideBoardThenRuntimeException" />
+       <option name="TEST_OBJECT" value="method" />
+       <method v="2">
+         <option name="Make" enabled="true" />
+       </method>
+     </configuration>
+     <list>
++      <item itemvalue="JUnit.Connect4TDDSpec" />
++      <item itemvalue="JUnit.Connect4TDDSpec.when4Diagonal1DiscsAreConnectedThenThatPlayerWins" />
++      <item itemvalue="JUnit.Connect4TDDSpec.whenDiscOutsideBoardThenRuntimeException" />
+       <item itemvalue="JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted" />
+-      <item itemvalue="JUnit.Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins" />
+-      <item itemvalue="JUnit.Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins" />
+-      <item itemvalue="JUnit.Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins" />
+-      <item itemvalue="JUnit.Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished" />
++      <item itemvalue="JUnit.Connect4TDDSpec.whenAskedForCurrentPlayerTheOutputNotice" />
+     </list>
+     <recent_temporary>
+       <list>
++        <item itemvalue="JUnit.Connect4TDDSpec" />
++        <item itemvalue="JUnit.Connect4TDDSpec.when4Diagonal1DiscsAreConnectedThenThatPlayerWins" />
++        <item itemvalue="JUnit.Connect4TDDSpec.whenDiscOutsideBoardThenRuntimeException" />
++        <item itemvalue="JUnit.Connect4TDDSpec.whenAskedForCurrentPlayerTheOutputNotice" />
+         <item itemvalue="JUnit.Connect4TDDSpec.whenADiscIsIntroducedTheBoardIsPrinted" />
+-        <item itemvalue="JUnit.Connect4TDDSpec.when4Diagonal2DiscsAreConnectedThenThatPlayerWins" />
+-        <item itemvalue="JUnit.Connect4TDDSpec.when4VerticalDiscsAreConnectedThenThatPlayerWins" />
+-        <item itemvalue="JUnit.Connect4TDDSpec.when4HorizontalDiscsAreConnectedThenThatPlayerWins" />
+-        <item itemvalue="JUnit.Connect4TDDSpec.whenNoDiscCanBeIntroducedTheGamesIsFinished" />
+       </list>
+     </recent_temporary>
+   </component>
+@@ -278,7 +248,8 @@
+   </component>
+   <component name="VcsManagerConfiguration">
+     <MESSAGE value="COMMIT INICIAL" />
+-    <option name="LAST_COMMIT_MESSAGE" value="COMMIT INICIAL" />
++    <MESSAGE value="sd" />
++    <option name="LAST_COMMIT_MESSAGE" value="sd" />
+   </component>
+   <component name="XDebuggerManager">
+     <breakpoint-manager>

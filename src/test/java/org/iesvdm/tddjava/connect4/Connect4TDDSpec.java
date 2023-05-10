@@ -52,12 +52,11 @@ public class Connect4TDDSpec {
         RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> {
             tested.putDiscInColumn(7);
         });
+        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column 7");
         RuntimeException runtimeException2 = assertThrows(RuntimeException.class, () -> {
             tested.putDiscInColumn(-1);
         });
-
-        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column 7");
-        assertThat(runtimeException.getMessage()).isEqualTo("Invalid column -1");
+        assertThat(runtimeException2.getMessage()).isEqualTo("Invalid column -1");
     }
 
     @Test
@@ -112,7 +111,8 @@ public class Connect4TDDSpec {
 
     @Test
     public void whenAskedForCurrentPlayerTheOutputNotice() {
-
+        tested.getCurrentPlayer();
+        assertThat(output.toString()).isEqualTo("Player R turn\n");
     }
 
     @Test
@@ -184,34 +184,34 @@ public class Connect4TDDSpec {
     @Test
     public void when4Diagonal1DiscsAreConnectedThenThatPlayerWins() {
         //diagonal ascendente
-        tested.putDiscInColumn(0);
+        tested.putDiscInColumn(0);//diagonal
         tested.putDiscInColumn(1);
-        tested.putDiscInColumn(1);
+        tested.putDiscInColumn(1);//diagonal
         tested.putDiscInColumn(2);
         tested.putDiscInColumn(2);
         tested.putDiscInColumn(3);
-        tested.putDiscInColumn(2);
+        tested.putDiscInColumn(2);//diagonal
         tested.putDiscInColumn(3);
         tested.putDiscInColumn(3);
-        tested.putDiscInColumn(4);
-        tested.putDiscInColumn(3);
+        tested.putDiscInColumn(5);
+        tested.putDiscInColumn(3);//diagonal
         assertThat(tested.getWinner()).isEqualTo("R");
     }
 
     @Test
     public void when4Diagonal2DiscsAreConnectedThenThatPlayerWins() {
         //diagonal descendente
-        tested.putDiscInColumn(3);
+        tested.putDiscInColumn(3);//diagonal
         tested.putDiscInColumn(2);
-        tested.putDiscInColumn(2);
+        tested.putDiscInColumn(2);//diagonal
         tested.putDiscInColumn(1);
         tested.putDiscInColumn(1);
         tested.putDiscInColumn(6);
-        tested.putDiscInColumn(1);
+        tested.putDiscInColumn(1);//diagonal
         tested.putDiscInColumn(0);
         tested.putDiscInColumn(0);
         tested.putDiscInColumn(0);
-        tested.putDiscInColumn(0);
+        tested.putDiscInColumn(0);//diagonal
         assertThat(tested.getWinner()).isEqualTo("R");
     }
 }
